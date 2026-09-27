@@ -1,4 +1,4 @@
-name: DLL Koboldcpp Windows
+name: Koboldcpp Windows
 
 on:
   workflow_dispatch:
