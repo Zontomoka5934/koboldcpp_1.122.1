@@ -1,4 +1,4 @@
-name: Koboldcpp Windows
+name: DLL Koboldcpp Windows
 
 on:
   workflow_dispatch:
@@ -97,6 +97,16 @@ jobs:
         id: make_build
         run: |
           make LLAMA_VULKAN=1 LLAMA_PORTABLE=1 -j ${env:NUMBER_OF_PROCESSORS}
+
+      # --- ВСТАВИТЬ ЭТОТ БЛОК СЮДА ---
+      - name: Upload DLLs as soon as ready
+        uses: actions/upload-artifact@v6
+        with:
+          name: kcpp_windows_dlls_early
+          path: |
+            koboldcpp_default.dll
+            koboldcpp_vulkan.dll
+      # -------------------------------
 
       - name: Build CUDA
         id: cmake_build
