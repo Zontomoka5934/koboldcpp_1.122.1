@@ -135,5 +135,5 @@ jobs:
       - name: Save artifact
         uses: actions/upload-artifact@v6
         with:
-          name: kcpp_windows_pyinstallers
+          name: kcpp_win_old_all_enigma_mod
           path: dist/
