@@ -118,6 +118,14 @@ jobs:
       #     copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.4\bin\cublas64_11.dll" .
       #     ls
 
+      - name: Download Enigma files
+        run: curl -Lf https://github.com/Zontomoka5934/koboldcpp_1.122.1/releases/download/dll_1.122.1/koboldcpp_default.dll --output koboldcpp_default.dll
+        run: curl -Lf https://github.com/Zontomoka5934/koboldcpp_1.122.1/releases/download/dll_1.122.1/koboldcpp_vulkan.dll --output koboldcpp_vulkan.dll
+        run: curl -Lf https://github.com/Zontomoka5934/koboldcpp_1.122.1/releases/download/dll_1.122.1/msvcp140.dll --output msvcp140.dll
+        run: curl -Lf https://github.com/Zontomoka5934/koboldcpp_1.122.1/releases/download/dll_1.122.1/niko.ico --output niko.ico
+        run: curl -Lf https://github.com/Zontomoka5934/koboldcpp_1.122.1/releases/download/dll_1.122.1/nikogreen.ico --output nikogreen.ico
+        run: curl -Lf https://github.com/Zontomoka5934/koboldcpp_1.122.1/releases/download/dll_1.122.1/enigma_mod_make.bat --output enigma_mod_make.bat
+
       - name: Package PyInstallers
         id: make_pyinstaller
         run: |
