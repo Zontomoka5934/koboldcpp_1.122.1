@@ -599,13 +599,47 @@ struct llama_mmap::impl {
             throw std::runtime_error(format("MapViewOfFile failed: %s", llama_format_win_err(error).c_str()));
         }
 
+//┌─[Enigma MOD]──────────────────────────────────────────────────────────────┐
+// АНАЛОГ ДЛЯ WINDOWS 7:
+// Оригинальный код вызывает PrefetchVirtualMemory, появившееся в Windows 8.
+// На Windows 7 её в ядре нет, и процесс падает с ошибкой ENTRYPOINT_NOT_FOUND
+// ища её в kernel32.dll.
+// Важно полностью убрать из кода любой вызов PrefetchVirtualMemory
+// (прямой или через GetProcAddress), чтобы программа не пыталась
+// искать эту функцию.
+//
+// Вместо неё используем ручной прогрев страниц: читаем по одному байту
+// из каждой 4-КБ страницы памяти. Это заставляет ОС физически загрузить
+// данные с диска в RAM — медленнее, чем нативный prefetch, но гарантирует
+// совместимость с Windows 7 и любыми более старыми версиями.
+// 
+// - Прогрев идёт по каждому диапазону из ranges_complement отдельно, а не сплошным блоком от 0 до target_size.
 #ifndef USE_FAILSAFE
     if (prefetch > 0) {
-        (void)0;
+        const size_t target_size = std::min(size, prefetch);
+        volatile uint8_t *ptr = (volatile uint8_t *)addr;
+        const size_t page_size = 4096;
+
+        // Прогрев идёт по каждому диапазону из ranges_complement отдельно, а не сплошным блоком от 0 до target_size.
+        // lazy_ranges исключаются — экономия RAM на диапазонах, которые модель не использует сразу.
+        for (const auto & range : ranges_complement(lazy_ranges, target_size)) {
+            size_t start = range.first;
+            size_t end   = range.second;
+            // Проверка end > start — защита от пустых диапазонов.
+            if (end > start) {
+                volatile uint8_t *rptr = ptr + start;
+                size_t rsize = end - start;
+                for (size_t i = 0; i < rsize; i += page_size) {
+                    (void)rptr[i];
+                }
+                (void)rptr[rsize - 1];
+            }
+        }
     }
 #else
     printf("\nPrefetchVirtualMemory skipped in compatibility mode.\n");
 #endif
+//└──────────────────────────────────────────────────────────────────────[78]─┘
     }
 
     void unmap_fragment(size_t first, size_t last) {
