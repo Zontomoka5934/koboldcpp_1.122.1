@@ -201,13 +201,26 @@ struct llama_v2_mmap {
             throw std::runtime_error(format_old("MapViewOfFile failed: %s", llama_v2_format_win_err(error).c_str()));
         }
 
-#ifndef USE_FAILSAFE
-    if (prefetch > 0) {
-        (void)0;
-    }
-#else
-    printf("\nPrefetchVirtualMemory skipped in compatibility mode.\n");
-#endif
+	//┌─[Enigma MOD]──────────────────────────────────────────────────────────────┐
+        // АНАЛОГ ПРЕДЗАГРУЗКИ ДЛЯ WINDOWS 7:
+        // Принудительно считываем по одному байту с каждой страницы памяти.
+        // Это заставляет ОС физически загрузить данные с диска в RAM.
+	#ifndef USE_FAILSAFE
+        if (prefetch && size > 0) {            
+            // volatile нужен, чтобы компилятор не удалил этот цикл при оптимизации
+            volatile uint8_t *ptr = (volatile uint8_t *)addr;
+            const size_t page_size = 4096; // Стандартный размер страницы в Windows
+            
+            for (size_t i = 0; i < size; i += page_size) {
+                (void)ptr[i];
+            }
+            // Читаем последний байт для завершения покрытия всей области
+            (void)ptr[size - 1];
+        }
+        #else
+        printf("\nPrefetching skipped in compatibility mode.\n");
+        #endif
+	//└──────────────────────────────────────────────────────────────────────[78]─┘
     }
 
     ~llama_v2_mmap() {
