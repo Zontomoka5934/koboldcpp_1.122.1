@@ -3403,7 +3403,7 @@ static bool ggml_thread_apply_priority(int32_t prio) {
 
 #ifndef USE_FAILSAFE
     if (prio != GGML_SCHED_PRIO_LOW) {
-        return true; 
+        // Power Throttling не существует на Win7 — пропускаем
     }
 #else
     if(!powethrottlemsgshown) {
