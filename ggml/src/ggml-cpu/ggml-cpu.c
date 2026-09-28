@@ -3401,16 +3401,20 @@ static bool ggml_thread_apply_priority(int32_t prio) {
         case GGML_SCHED_PRIO_REALTIME: p = THREAD_PRIORITY_TIME_CRITICAL; break;
     }
 
-#ifndef USE_FAILSAFE
-    if (prio != GGML_SCHED_PRIO_LOW) {
-        // Power Throttling не существует на Win7 — пропускаем
-    }
-#else
-    if(!powethrottlemsgshown) {
-        powethrottlemsgshown = true;
-        printf("\nPower Throttling skipped in compatibility mode.\n");
-    }
-#endif
+    //┌─[Enigma MOD]──────────────────────────────────────────────────────────────┐
+    // Избавляемся от взовов SetProcessInformation и ProcessPowerThrottling
+    // В ядре старых Windows их нет - ставим заглушку.
+    #ifndef USE_FAILSAFE
+        if (prio != GGML_SCHED_PRIO_LOW) {
+            // Power Throttling не существует на Win7 — пропускаем
+        }
+    #else
+        if(!powethrottlemsgshown) {
+            powethrottlemsgshown = true;
+            printf("\nPower Throttling skipped in compatibility mode.\n");
+        }
+    #endif
+    //└──────────────────────────────────────────────────────────────────────[78]─┘
 
     if (prio == GGML_SCHED_PRIO_NORMAL) {
         // Keep inherited policy/priority
