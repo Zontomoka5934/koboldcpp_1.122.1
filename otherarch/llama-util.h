@@ -271,13 +271,28 @@ struct llama_v3_mmap {
             throw std::runtime_error(format_old("MapViewOfFile failed: %s", llama_v3_format_win_err(error).c_str()));
         }
 
-#ifndef USE_FAILSAFE
-    if (prefetch > 0) {
-        (void)0;
-    }
-#else
-    printf("\nPrefetchVirtualMemory skipped in compatibility mode.\n");
-#endif
+	//┌─[Enigma MOD]──────────────────────────────────────────────────────────────┐
+	// Прогреваем память вручную.
+	// Используем volatile, чтобы компилятор не вырезал чтение при оптимизации.
+	#ifndef USE_FAILSAFE
+	    if (prefetch && size > 0) {
+	        volatile uint8_t *ptr = static_cast<volatile uint8_t *>(addr);
+	        const size_t page_size = 4096;
+	        
+	        // Цикл по страницам
+	        for (size_t i = 0; i < size; i += page_size) {
+	            (void)ptr[i];
+	        }
+	        
+	        // Чтение последнего байта (безопасно, так как есть проверка size > 0)
+	        (void)ptr[size - 1];
+	    }
+	#else
+	    if (prefetch) {
+	        printf("\nPrefetching skipped in compatibility mode.\n");
+	    }
+	#endif
+	//└──────────────────────────────────────────────────────────────────────[78]─┘
     }
 
     ~llama_v3_mmap() {
